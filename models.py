@@ -10,4 +10,4 @@ class Task:
     deadline: str
     priority: str
     note: str
-    complited:bool
+    completed:bool
