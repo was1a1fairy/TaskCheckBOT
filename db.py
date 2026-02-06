@@ -55,8 +55,8 @@ class Repo:
                 INSERT INTO tasks
                 (name, created_at, deadline, priority, note, user_id)
                 VALUES
-                (?,?,?,?,?,?)
-            """,(task.name,task.created_at,task.deadline,task.priority,task.note,id_from_user),)
+                (?,datetime('now'),?,?,?,?)
+            """,(task.name,task.deadline,task.priority,task.note,id_from_user),)
         await self.conn.commit()
         await self.close()
 
@@ -100,7 +100,7 @@ class Repo:
         await self.close()
 
 
-    async def show_tasks(self, id_from_user, param_for_sort=None,sort_key=None):
+    async def show_tasks(self, id_from_user, param_for_sort=None,sort_key=None) -> list:
         """
         имеется возможность сортировки
         !по дате:
