@@ -87,7 +87,7 @@ async def priority1(callback: types.CallbackQuery, state:FSMContext):
 
 @router.callback_query(F.data=="medium")
 async def priority2(callback: types.CallbackQuery, state:FSMContext):
-    await state.update_data(priority=callback.text.strip())
+    await state.update_data(priority=callback.data)
     await callback.message.reply("Супер! Теперь напиши об этой задаче подробнее и мы добавим ее в календарь!")
     await callback.answer()
     await state.set_state(States.note)
@@ -95,7 +95,7 @@ async def priority2(callback: types.CallbackQuery, state:FSMContext):
 
 @router.callback_query(F.data=="low")
 async def priority3(callback: types.CallbackQuery, state:FSMContext):
-    await state.update_data(priority=callback.text.strip())
+    await state.update_data(priority=callback.data)
     await callback.message.reply("Супер! Теперь напиши об этой задаче подробнее и мы добавим ее в календарь!")
     await callback.answer()
     await state.set_state(States.note)
