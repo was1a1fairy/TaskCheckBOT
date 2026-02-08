@@ -11,6 +11,7 @@ class Repo:
         self.conn = None
 
 
+
     async def close(self):
         if self.conn:
             await self.conn.close()
@@ -46,6 +47,7 @@ class Repo:
         )
         await self.conn.commit()
         await self.close()
+        return self
 
 
     async def add_task(self, task: Task, id_from_user:int):

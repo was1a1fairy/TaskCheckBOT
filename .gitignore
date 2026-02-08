@@ -1,6 +1,7 @@
 # created by virtualenv automatically
 .venv/Lib
 secret_data.py
+repo.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
