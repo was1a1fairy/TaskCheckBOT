@@ -9,5 +9,9 @@ async def add_task(data, id_user):
     await bd.add_task(task, id_user)
 
 
-async def view_tasks(user_id, param_for_sort, key_sort):
-    pass
+async def view_tasks(id_user, param=None, key=None):
+    bd = await db.Repo().create_db()
+    task_list = bd.show_tasks(id_user, param,key)
+    return await task_list
+
+

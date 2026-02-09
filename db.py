@@ -129,7 +129,7 @@ class Repo:
                 """, (id_from_user,))
         else:
             await self.close()
-            return
+            raise ValueError
         rows = await res.fetchall()
         await self.close()
         return [dict(row) for row in rows]
