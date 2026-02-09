@@ -3,7 +3,7 @@ import asyncio
 
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, Message
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, Message, CallbackQuery
 from aiogram.filters.command import CommandObject
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import services.basic
@@ -16,6 +16,10 @@ class States(StatesGroup):
     deadline = State()
     priority = State()
     note = State()
+
+class StateView(StatesGroup):
+    pass
+
 
 @router.message(filters.Command("start"))
 async def start(message: types.Message):
@@ -134,9 +138,19 @@ async def view_tasks(callback: types.CallbackQuery):
     await callback.answer()
 
 
+@router.callback_query(F.data=="sort")
+async def sort(callback: CallbackQuery):
+    await callback.message.reply(f"""{await services.basic.view_tasks(callback.from_user.id)}""")
 
 
+@router.callback_query(F.data=="first_new")
+async def first_new(callback: CallbackQuery):
+    await callback.message.reply(f"""{await services.basic.view_tasks(callback.from_user.id, "created_at", "DESC")}""")
 
+
+@router.callback_query(F.data=="first_old")
+async def first_old(callback: CallbackQuery):
+    await callback.message.reply(f"""{await services.basic.view_tasks(callback.from_user.id,"created_at", "ASC")}""")
 
 
 
