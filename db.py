@@ -64,7 +64,7 @@ class Repo:
 
 
     def __check_params(self, param_for_change):
-        return (param_for_change in ("name","created_at","deadline","priority","note"))
+        return (param_for_change in ("name","created_at","deadline","priority","note", "completed"))
 
     async def edit_task(self, id_task, param_for_change, new_value):
         if not self.conn:
