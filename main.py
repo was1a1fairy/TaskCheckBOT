@@ -1,13 +1,8 @@
-from ipaddress import summarize_address_range
 
 import aiogram
-from aiogram import filters, Dispatcher
+from aiogram import Dispatcher
 import asyncio
-from aiogram import F
-from aiogram import types
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup
 
-import db
 from secret_data import token
 import handlers.basic
 
