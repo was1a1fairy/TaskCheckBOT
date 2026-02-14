@@ -1,5 +1,4 @@
 import aiosqlite
-from typing import Optional
 from models import Task
 
 class Repo:
@@ -133,6 +132,18 @@ class Repo:
         rows = await res.fetchall()
         await self.close()
         return [dict(row) for row in rows]
+
+
+    async def search_by_id(self, user_id:int, task_id:int):
+        if not self.conn:
+            await self.connect()
+        res = await self.conn.execute("""
+                        SELECT * FROM tasks
+                        WHERE user_id = ? AND id = ?;
+                        """, (user_id, task_id))
+        task = await res.fetchone()
+        await self.close()
+        return [dict(task)]
 
 
     async def search_task(self, key_word:str) -> Task:
