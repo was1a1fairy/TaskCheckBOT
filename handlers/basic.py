@@ -15,7 +15,11 @@ import db
 router = Router()
 
 class States(StatesGroup):
+    """
+    ne_deadline = not enough deadline, используется перед проверкой корректности дедлайна
+    """
     name = State()
+    ne_deadline = State()
     deadline = State()
     priority = State()
     note = State()
@@ -49,10 +53,10 @@ async def start(message: types.Message):
 
 @router.callback_query(F.data=="help")
 async def helpp(callback: CallbackQuery):
-    await callback.message.reply(f"""   Тебе нужна помощь?
-     Давай объясню что я умею и покажу как пользоваться моими командами!\n
-     Нажми добавить задачу, последовательно выбирай настройки
-     Добавляй нужное количество задач и отслеживай их через "список задач" в меню!""")
+    await callback.message.reply(f"""Тебе нужна помощь?
+    Давай объясню что я умею и покажу как пользоваться моими командами!\n
+    Нажми добавить задачу, последовательно выбирай настройки
+    Добавляй нужное количество задач и отслеживай их через "список задач" в меню!""")
 
 
 @router.callback_query(F.data=="exit")
@@ -77,6 +81,7 @@ async def exitt(callback:CallbackQuery):
                          reply_markup=builder.as_markup()
                          )
 
+# ниже базовые хендлеры для создания и просмотра задач
 
 @router.callback_query(F.data=="add_task")
 async def add_task(callback: types.CallbackQuery, state:FSMContext):
@@ -89,13 +94,29 @@ async def add_task(callback: types.CallbackQuery, state:FSMContext):
 async def name(message: types.Message, state:FSMContext):
     await state.update_data(name=message.text.strip())
     await message.reply("Супер! Теперь укажи до какого числа нужно выполнить задачу"
-                        "(дедлайн указывается в формате дд/мм/гггг)")
-    await state.set_state(States.deadline)
+                        "(дедлайн указывается в формате дд.мм.гггг)")
+    await state.set_state(States.ne_deadline)
+
+
+@router.message(States.ne_deadline)
+async def try_deadline(message: types.Message, state: FSMContext):
+    deadline = message.text.strip()
+    try:
+        await services.basic.check_deadline(deadline)
+    except ValueError:
+        await message.reply("ёклмн! Твой дедлайн должен быть не раньше сегодняшнего дня!\nПопробуй снова:")
+    else:
+        if await services.basic.check_deadline(deadline):
+            await state.update_data(deadline=message.text.strip())
+            await state.set_state(States.deadline)
+            await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить")
+        else:
+            await message.reply("ёклмн! Твой дедлайн должен быть в формате дд.мм.гггг!\nПопробуй снова:")
 
 
 @router.message(States.deadline)
 async def deadline(message: types.Message, state:FSMContext):
-    await state.update_data(deadline=message.text.strip())
+
     builder = InlineKeyboardBuilder()
 
     builder.button(text="высокий",

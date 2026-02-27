@@ -1,3 +1,5 @@
+from certifi import contents
+
 import db
 import models
 from services import additional
@@ -27,3 +29,42 @@ async def format_output_task(user_id:int, task_id:int):
         f"\n*подробности:* {task[0][5]},\n\n"
         f"*{"не выполнена!" if task[0][6]==0 else "выполнена!"}*")
     return meow
+
+
+async def check_deadline(deadline) -> bool:
+    """
+    проверяет корректность введения дедлайна
+    :param deadline: дд.мм.гггг
+    :return: bool
+    """
+    if "\\" in deadline:
+        deadline = deadline.split("\\")
+    elif "/" in deadline:
+        deadline = deadline.split("/")
+    elif "." in deadline:
+        deadline = deadline.split(".")
+    else:
+        return False
+
+    if len(deadline) != 3:
+        return False
+
+    day = int(deadline[0])
+    month = int(deadline[1])
+    year = int(deadline[2])
+
+    if (31 < day < 0) or (0 > month > 12) or year < 2026:
+        return False
+
+    now = await db.Repo().date_now()
+    if now[2] > deadline[2]:
+        raise ValueError("заданный пользователем дедлайн раньше сегодняшнего дня")
+    elif now[2] == deadline[2]:
+        if now[1] > deadline[1]:
+            raise ValueError("заданный пользователем дедлайн раньше сегодняшнего дня")
+        elif now[1] == deadline[1]:
+            if now[0] > deadline[0]:
+                raise ValueError("заданный пользователем дедлайн раньше сегодняшнего дня")
+    return True
+
+

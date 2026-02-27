@@ -9,7 +9,7 @@ class Repo:
         # self.conn: Optional[aiosqlite.Connection] = None
         self.conn = None
 
-
+    # служебные
 
     async def close(self):
         if self.conn:
@@ -22,6 +22,24 @@ class Repo:
         # Удобно получить строки не как кортежи, а как словари (dict)
         self.conn.row_factory = aiosqlite.Row
 
+
+
+    async def date_now(self):
+        """
+
+        :return: дату в формате [дд, мм, гггг]
+        """
+        if not self.conn:
+            await self.connect()
+        res = await self.conn.execute("""
+                SELECT date('now');
+            """)
+        data = await res.fetchone()
+        await self.close()
+        return data[0].split("-")[::-1]
+
+
+    # предметные
 
     async def create_db(self):
         if not self.conn:
@@ -144,6 +162,9 @@ class Repo:
         task = await res.fetchone()
         await self.close()
         return [dict(task)]
+
+
+
 
 
     async def search_task(self, key_word:str) -> Task:
