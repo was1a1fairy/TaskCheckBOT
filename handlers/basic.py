@@ -147,19 +147,7 @@ async def save_note_getkb(message: types.Message, state:FSMContext):
     await state.update_data(note=message.text.strip())
     await services.basic.add_task(await state.get_data(), message.from_user.id)
 
-    keyboard = [
-        [KeyboardButton(text="добавить задачу"),
-        KeyboardButton(text="редактировать задачу")],
-        [KeyboardButton(text="отметить выполнение"),
-        KeyboardButton(text="удалить задачу")],
-        [KeyboardButton(text="список задач"),
-        KeyboardButton(text="установить напоминание")]
-    ]
-
-    reply_markup = ReplyKeyboardMarkup(
-        keyboard=keyboard,
-        resize_keyboard=True
-    )
+    reply_markup = services.basic.get_kb()
 
     await message.reply('Отлично, мы создали задачу! Теперь ты можешь посмотреть ее, нажав в меню "список задач"',
                         reply_markup=reply_markup)

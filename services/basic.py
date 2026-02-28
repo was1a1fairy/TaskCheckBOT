@@ -3,6 +3,7 @@ from certifi import contents
 import db
 import models
 from services import additional
+from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, Message, CallbackQuery, KeyboardButton
 
 
 async def add_task(data, id_user):
@@ -68,3 +69,21 @@ async def check_deadline(deadline) -> bool:
     return True
 
 
+# for handlers
+
+def get_kb():
+    keyboard = [
+        [KeyboardButton(text="добавить задачу"),
+         KeyboardButton(text="редактировать задачу")],
+        [KeyboardButton(text="отметить выполнение"),
+         KeyboardButton(text="удалить задачу")],
+        [KeyboardButton(text="список задач"),
+         KeyboardButton(text="установить напоминание")]
+    ]
+
+    reply_markup = ReplyKeyboardMarkup(
+        keyboard=keyboard,
+        resize_keyboard=True
+    )
+
+    return reply_markup
