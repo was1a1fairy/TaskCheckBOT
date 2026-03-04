@@ -15,11 +15,7 @@ import db
 router = Router()
 
 class States(StatesGroup):
-    """
-    ne_deadline = not enough deadline, используется перед проверкой корректности дедлайна
-    """
     name = State()
-    ne_deadline = State()
     deadline = State()
     priority = State()
     note = State()
@@ -95,10 +91,10 @@ async def save_name_ask_deadline(message: types.Message, state:FSMContext):
     await state.update_data(name=message.text.strip())
     await message.reply("Супер! Теперь укажи до какого числа нужно выполнить задачу"
                         "(дедлайн указывается в формате дд.мм.гггг)")
-    await state.set_state(States.ne_deadline)
+    await state.set_state(States.deadline)
 
 
-@router.message(States.ne_deadline)
+@router.message(States.deadline)
 async def try_save_deadline(message: types.Message, state: FSMContext):
     deadline = message.text.strip()
     try:
@@ -108,14 +104,19 @@ async def try_save_deadline(message: types.Message, state: FSMContext):
     else:
         if await services.basic.check_deadline(deadline):
             await state.update_data(deadline=message.text.strip())
-            await state.set_state(States.deadline)
-            await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить")
+            await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить", reply_markup=services.basic.something().as_markup())
         else:
             await message.reply("ёклмн! Твой дедлайн должен быть в формате дд.мм.гггг!\nПопробуй снова:")
 
 
-@router.message(States.deadline)
-async def ask_priority(message: types.Message, state:FSMContext):
+@router.callback_query(F.data=="True")
+async def ask_priority(callback: types.CallbackQuery, state:FSMContext):
+
+    await callback.bot.edit_message_reply_markup(
+        chat_id=callback.message.chat.id,
+        message_id=callback.message.message_id,
+        reply_markup=None
+    )
 
     builder = InlineKeyboardBuilder()
 
@@ -128,7 +129,7 @@ async def ask_priority(message: types.Message, state:FSMContext):
     builder.button(text="низкий",
                    callback_data="low")
 
-    await message.answer("Выбери приоритет для этой задачи:",
+    await callback.message.answer("Выбери приоритет для этой задачи:",
                          reply_markup=builder.as_markup()
                          )
     await state.set_state(States.priority)

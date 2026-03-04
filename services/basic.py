@@ -1,3 +1,4 @@
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from certifi import contents
 
 import db
@@ -87,3 +88,8 @@ def get_kb():
     )
 
     return reply_markup
+
+def something():
+    keyboard = InlineKeyboardBuilder()
+    keyboard.button(text="что-нибудь",callback_data="True")
+    return keyboard
