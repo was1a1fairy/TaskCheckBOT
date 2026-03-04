@@ -79,11 +79,17 @@ async def exitt(callback:CallbackQuery):
 
 # ниже базовые хендлеры для создания и просмотра задач
 
-@router.callback_query(F.data=="добавить задачу")
-async def add_task(callback: types.CallbackQuery, state:FSMContext):
-    await callback.message.answer("Придумайте название вашей задаче:")
-    await callback.answer()
+
+@router.message(lambda message: message.text == "добавить задачу")
+@router.callback_query(F.data == "добавить задачу")
+async def add_task(event: types.CallbackQuery | types.Message, state: FSMContext):
+    if isinstance(event, types.CallbackQuery):
+        await event.message.answer("Придумайте название вашей задачи:")
+        await event.answer()
+    else:
+        await event.answer("Придумайте название вашей задачи:")
     await state.set_state(States.name)
+
 
 
 @router.message(States.name)
