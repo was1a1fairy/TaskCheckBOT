@@ -1,14 +1,11 @@
 
-from aiogram import filters, Router, F, types
-import asyncio
+from aiogram import Router, F, types
 
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, Message, CallbackQuery, KeyboardButton
-from aiogram.filters.command import CommandObject
+from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-import services.basic
-import db
+import services.for_main_handlers
 
 router2 = Router()
 
@@ -50,13 +47,13 @@ async def save_name_ask_deadline(message: types.Message, state:FSMContext):
 async def try_save_deadline(message: types.Message, state: FSMContext):
     deadline = message.text.strip()
     try:
-        await services.basic.check_deadline(deadline)
+        await services.for_main_handlers.check_deadline(deadline)
     except ValueError:
         await message.reply("ёклмн! Твой дедлайн должен быть не раньше сегодняшнего дня!\nПопробуй снова:")
     else:
-        if await services.basic.check_deadline(deadline):
+        if await services.for_main_handlers.check_deadline(deadline):
             await state.update_data(deadline=message.text.strip())
-            await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить", reply_markup=services.basic.something().as_markup())
+            await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить", reply_markup=services.for_main_handlers.something().as_markup())
         else:
             await message.reply("ёклмн! Твой дедлайн должен быть в формате дд.мм.гггг!\nПопробуй снова:")
 
@@ -98,9 +95,9 @@ async def save_priority_ask_note(callback: types.CallbackQuery, state:FSMContext
 @router2.message(States.note)
 async def save_note_getkb(message: types.Message, state:FSMContext):
     await state.update_data(note=message.text.strip())
-    await services.basic.add_task(await state.get_data(), message.from_user.id)
+    await services.for_main_handlers.add_task(await state.get_data(), message.from_user.id)
 
-    reply_markup = services.basic.get_kb()
+    reply_markup = services.for_main_handlers.get_kb()
 
     await message.reply('Отлично, мы создали задачу! Теперь ты можешь посмотреть ее, нажав в меню "список задач"',
                         reply_markup=reply_markup)
@@ -144,7 +141,7 @@ async def view_tasks(event: (types.CallbackQuery | types.Message)):
 @router2.callback_query(F.data=="sort")
 async def sort(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await services.basic.view_tasks(callback.from_user.id)
+    array = await services.for_main_handlers.view_tasks(callback.from_user.id)
 
     if not array:
         await callback.message.answer("У вас пока нет задач(")
@@ -163,7 +160,7 @@ async def sort(callback: CallbackQuery):
 @router2.callback_query(lambda bebebe: bebebe.data in ("first_new","first_old"))
 async def first_new(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await services.basic.view_tasks(
+    array = await services.for_main_handlers.view_tasks(
         callback.from_user.id,
         "created_at",
         "DESC" if callback.data=="first_new" else "ASC"
@@ -204,7 +201,7 @@ async def chose_param(callback:CallbackQuery):
 @router2.callback_query(F.data=="dead_desc")
 async def dead_desc(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await services.basic.view_tasks(callback.from_user.id, "deadline", "DESC")
+    array = await services.for_main_handlers.view_tasks(callback.from_user.id, "deadline", "DESC")
 
     if not array:
         await callback.message.answer("У вас пока нет задач(")
@@ -223,7 +220,7 @@ async def dead_desc(callback: CallbackQuery):
 @router2.callback_query(lambda bebebe: bebebe.data in ("priority_high","priority_low"))
 async def priority_high(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await services.basic.view_tasks(
+    array = await services.for_main_handlers.view_tasks(
         callback.from_user.id,
         "priority",
         "DESC" if callback.data=="priority_high" else "ASC"
@@ -246,7 +243,7 @@ async def priority_high(callback: CallbackQuery):
 @router2.callback_query(lambda f: f.data in ("long_note","short_note"))
 async def long_note(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await services.basic.view_tasks(
+    array = await services.for_main_handlers.view_tasks(
         callback.from_user.id,
         "note",
         "ASC" if callback.data=="long_note" else "DESC"
@@ -269,7 +266,7 @@ async def long_note(callback: CallbackQuery):
 @router2.callback_query(lambda f: f.data in ("completed","no_completed"))
 async def completed(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await services.basic.view_tasks(
+    array = await services.for_main_handlers.view_tasks(
         callback.from_user.id,
         "completed",
         "DESC" if "completed" else "ASC"
@@ -294,4 +291,4 @@ async def list_tasks(callback: CallbackQuery):
     task_id = int(callback.data[5::])
     user_id = callback.from_user.id
     print(user_id)
-    await callback.message.answer(f"{await services.basic.format_output_task(user_id, task_id)}", parse_mode="Markdown")
+    await callback.message.answer(f"{await services.for_main_handlers.format_output_task(user_id, task_id)}", parse_mode="Markdown")

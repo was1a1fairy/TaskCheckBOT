@@ -1,10 +1,9 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from certifi import contents
 
 import db
 import models
 from services import additional
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, Message, CallbackQuery, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
 async def add_task(data, id_user):

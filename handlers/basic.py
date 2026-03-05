@@ -1,10 +1,8 @@
 
 from aiogram import filters, Router, F, types
-import asyncio
 
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardMarkup, ReplyKeyboardMarkup, Message, CallbackQuery, KeyboardButton
-from aiogram.filters.command import CommandObject
+from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 router1 = Router()
