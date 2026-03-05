@@ -16,7 +16,8 @@ dp = Dispatcher()
 
 async def main():
 
-    dp.include_routers(handlers.basic.router)
+    dp.include_router1s(handlers.basic.router11)
+    dp.include_router1s(handlers.basic.router12)
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
