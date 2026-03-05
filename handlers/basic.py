@@ -48,15 +48,16 @@ async def start(message: types.Message):
 
 
 @router.callback_query(F.data=="help")
-async def helpp(callback: CallbackQuery):
+async def helpp(callback: CallbackQuery, state: FSMContext):
     await callback.message.reply(f"""Тебе нужна помощь?
     Давай объясню что я умею и покажу как пользоваться моими командами!\n
     Нажми добавить задачу, последовательно выбирай настройки
     Добавляй нужное количество задач и отслеживай их через "список задач" в меню!""")
+    await state.clear()
 
 
 @router.callback_query(F.data=="exit")
-async def exitt(callback:CallbackQuery):
+async def exitt(callback:CallbackQuery,state: FSMContext):
     builder = InlineKeyboardBuilder()
 
     builder.button(text="добавить задачу!",
@@ -76,6 +77,9 @@ async def exitt(callback:CallbackQuery):
                         "Давай добавим задачу!",
                          reply_markup=builder.as_markup()
                          )
+    await callback.answer()
+
+    await state.clear()
 
 # ниже базовые хендлеры для создания и просмотра задач
 
@@ -162,9 +166,9 @@ async def save_note_getkb(message: types.Message, state:FSMContext):
     await state.clear()
 
 
-
-@router.callback_query(F.data=="список задач")
-async def view_tasks(callback: types.CallbackQuery):
+@router.message(lambda message: message.text == "список задач")
+@router.callback_query(F.data == "список задач")
+async def view_tasks(event: (types.CallbackQuery | types.Message)):
     builder = InlineKeyboardBuilder()
 
     builder.button(text="по умолчанию",
@@ -184,11 +188,15 @@ async def view_tasks(callback: types.CallbackQuery):
 
     builder.adjust(1)
 
-    await callback.message.answer("Выберите как отправить ваши задачи:",
-                          reply_markup=builder.as_markup()
-                          )
-
-    await callback.answer()
+    if isinstance(event, types.CallbackQuery):
+        await event.message.answer("Выберите как отправить ваши задачи:",
+                              reply_markup=builder.as_markup()
+                              )
+        await event.answer()
+    else:
+        await event.answer("Выберите как отправить ваши задачи:",
+                                   reply_markup=builder.as_markup()
+                                   )
 
 
 @router.callback_query(F.data=="sort")
