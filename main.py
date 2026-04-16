@@ -4,7 +4,7 @@ from aiogram import Dispatcher
 import asyncio
 
 from secret_data import token
-import handlers.basic, handlers.main
+import handlers.basic, handlers.main, handlers.optional
 
 
 
@@ -18,6 +18,7 @@ async def main():
 
     dp.include_routers(handlers.basic.router1)
     dp.include_routers(handlers.main.router2)
+    dp.include_routers(handlers.optional.router3)
     await dp.start_polling(bot)
 
 if __name__ == '__main__':

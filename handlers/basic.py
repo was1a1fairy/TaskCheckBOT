@@ -8,7 +8,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 router1 = Router()
 
 
-
 @router1.message(filters.Command("start"))
 async def start(message: types.Message):
     builder = InlineKeyboardBuilder()
@@ -65,8 +64,3 @@ async def exitt(callback:CallbackQuery,state: FSMContext):
     await callback.answer()
 
     await state.clear()
-
-
-@router1.message(lambda message: True)
-async def handler(message: types.Message):
-    await message.reply("Я не умею распознавать сообщения, воспользуйся пожалуйста командой или меню!\n/help")

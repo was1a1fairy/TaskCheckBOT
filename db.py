@@ -21,6 +21,7 @@ class Repo:
         self.conn = await aiosqlite.connect(self.path)
         # Удобно получить строки не как кортежи, а как словари (dict)
         self.conn.row_factory = aiosqlite.Row
+        return self
 
 
 
@@ -83,7 +84,8 @@ class Repo:
     def __check_params(self, param_for_change):
         return (param_for_change in ("name","created_at","deadline","priority","note", "completed"))
 
-    async def edit_task(self, id_task, param_for_change, new_value):
+
+    async def edit_task(self, user_id, id_task, param_for_change, new_value):
         if not self.conn:
             await self.connect()
 
@@ -92,7 +94,8 @@ class Repo:
                 UPDATE tasks
                 SET {param_for_change} = ?
                 WHERE id = ?;
-                """, (new_value, id_task))
+                WHERE user_id = ?;
+                """, (new_value, id_task, user_id))
             await self.conn.commit()
             await self.close()
 
@@ -186,3 +189,16 @@ class Repo:
         """)
         await self.close()
         return res_task
+
+    async def is_exist(self, user_id:str, task_name:str) -> bool:
+        if not self.conn:
+            await self.connect()
+        res = await self.conn.execute("""
+                SELECT * FROM tasks
+                WHERE user_id = ? AND name = ?;
+            """, (user_id, task_name),)
+        res = await res.fetchone()
+        await self.close()
+        if res:
+            return 1
+        return 0
