@@ -1,5 +1,5 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from . import additional
+from services.for_handlers import additional
 import db
 
 

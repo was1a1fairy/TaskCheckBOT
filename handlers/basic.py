@@ -4,12 +4,14 @@ from aiogram import filters, Router, F, types
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+import services.for_handlers.additional as additional
 
 router1 = Router()
 
 
 @router1.message(filters.Command("start"))
 async def start(message: types.Message):
+    await additional.create_db()
     builder = InlineKeyboardBuilder()
 
     builder.button(text="добавить задачу!",

@@ -5,14 +5,15 @@ from services.for_handlers import additional
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
+
 async def add_task(data, id_user):
-    bd = await db.Repo().create_db()
+    bd = db.Repo()
     task = models.Task(name=data["name"], deadline=data["deadline"], priority=data["priority"], note=data["note"])
     await bd.add_task(task, id_user)
 
 
 async def view_tasks(id_user, param=None, key=None) -> list[list]:
-    bd = await db.Repo().connect()
+    bd = await db.Repo().create_db()
     task_dict = await bd.show_tasks(id_user, param,key)
     return await additional.create_output(task_dict)
 

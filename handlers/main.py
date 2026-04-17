@@ -92,7 +92,7 @@ async def save_priority_ask_note(callback: types.CallbackQuery, state:FSMContext
 @router2.message(StatesMAIN.note)
 async def save_note_getkb(message: types.Message, state:FSMContext):
     await state.update_data(note=message.text.strip())
-    await  for_main.add_task(await state.get_data(), message.from_user.id)
+    await for_main.add_task(await state.get_data(), message.from_user.id)
 
     reply_markup =  for_main.get_kb()
 

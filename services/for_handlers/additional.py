@@ -5,6 +5,11 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 import db
 
+async def create_db():
+    bd = await db.Repo().create_db()
+    return bd
+
+
 async def create_output(list_task:list[dict]) -> list[list]:
 
     res = []
