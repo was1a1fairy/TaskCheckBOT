@@ -16,9 +16,11 @@ async def inline():
 
 
 async def edit_task(data:dict, user_id):
+    print(f"Data received: {data}")
     for key in data:
-        if key.value and key!="id":
-            await db.Repo().edit_task(user_id,data["id"],key,key.value)
+        print(f"Key: {key}, Value: {data[key]}")
+        if key!="id" and data[key]:
+            await db.Repo().edit_task(user_id,data["id"],key,data[key])
 
 
 async def view_tasks(id_user, param=None, key=None) -> list[list]:

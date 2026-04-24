@@ -52,7 +52,7 @@ async def save_name_ask_deadline(callback:types.CallbackQuery, state:FSMContext)
 
 @router2.message(StatesMAIN.deadline)
 async def try_save_deadline(message: types.Message, state: FSMContext):
-    await additional.try_deadline(message,state)
+    await additional.try_deadline(message,state,"True")
 
 
 @router2.callback_query(F.data=="True")
@@ -80,8 +80,8 @@ async def ask_priority(callback: types.CallbackQuery, state:FSMContext):
                          )
     await state.set_state(StatesMAIN.priority)
 
-
-@router2.callback_query(lambda bebebe: bebebe.data in ("high", "medium", "low"))
+@router2.callback_query(StatesMAIN.priority)
+# @router2.callback_query(lambda bebebe: bebebe.data in ("high", "medium", "low"))
 async def save_priority_ask_note(callback: types.CallbackQuery, state:FSMContext):
     await state.update_data(priority=callback.data)
     await callback.message.reply("Супер! Теперь напиши об этой задаче подробнее и мы добавим ее в календарь!")

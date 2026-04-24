@@ -86,7 +86,7 @@ def something(text):
     return keyboard
 
 
-async def try_deadline(message, state):
+async def try_deadline(message, state, point):
     deadline = message.text.strip()
     try:
         await check_deadline(deadline)
@@ -96,7 +96,7 @@ async def try_deadline(message, state):
         if await check_deadline(deadline):
             await state.update_data(deadline=message.text.strip())
             await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить",
-                                reply_markup=something("True").as_markup())
+                                reply_markup=something(point).as_markup())
         else:
             await message.reply("ёклмн! Твой дедлайн должен быть в формате дд.мм.гггг!\nПопробуй снова:")
 

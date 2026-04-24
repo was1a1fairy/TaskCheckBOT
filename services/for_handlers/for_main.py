@@ -6,7 +6,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
 
-async def add_task(data, id_user):
+async def add_task(data:dict, id_user):
     bd = db.Repo()
     task = models.Task(name=data["name"], deadline=data["deadline"], priority=data["priority"], note=data["note"])
     await bd.add_task(task, id_user)

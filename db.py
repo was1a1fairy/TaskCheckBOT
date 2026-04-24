@@ -76,7 +76,7 @@ class Repo:
                 (name, created_at, deadline, priority, note, user_id)
                 VALUES
                 (?,datetime('now'),?,?,?,?)
-            """,(task.name,task.deadline,task.priority,task.note,id_from_user),)
+            """,(task.name,task.deadline,task.priority,task.note,id_from_user))
         await self.conn.commit()
         await self.close()
 
@@ -86,18 +86,24 @@ class Repo:
 
 
     async def edit_task(self, user_id, id_task, param_for_change, new_value):
+        print(f"DB edit_task called: user_id={user_id}, id_task={id_task}, param={param_for_change}, value={new_value}")
         if not self.conn:
             await self.connect()
 
+        print(f"__check_params result: {self.__check_params(param_for_change)}")
         if self.__check_params(param_for_change):
-            await self.conn.execute(f"""
+            cursor = await self.conn.execute(f"""
                 UPDATE tasks
                 SET {param_for_change} = ?
-                WHERE id = ?;
-                WHERE user_id = ?;
+                WHERE id = ? AND user_id = ?;
                 """, (new_value, id_task, user_id))
             await self.conn.commit()
+
+            if cursor.rowcount == 0: print("no such task or user")
+            print("Database updated successfully")
             await self.close()
+        else:
+            print("Parameter check failed")
 
 
     async def delete_task(self, id_task):
