@@ -9,7 +9,7 @@ class Repo:
         # self.conn: Optional[aiosqlite.Connection] = None
         self.conn = None
 
-    # служебные
+# основные\для бд
 
     async def close(self):
         if self.conn:
@@ -24,23 +24,6 @@ class Repo:
         return self
 
 
-
-    async def date_now(self):
-        """
-
-        :return: дату в формате [дд, мм, гггг]
-        """
-        if not self.conn:
-            await self.connect()
-        res = await self.conn.execute("""
-                SELECT date('now');
-            """)
-        data = await res.fetchone()
-        await self.close()
-        return data[0].split("-")[::-1]
-
-
-    # предметные
 
     async def create_db(self):
         if not self.conn:
@@ -68,6 +51,23 @@ class Repo:
         return self
 
 
+# предметные/главные
+
+    async def date_now(self):
+        """
+
+        :return: дату в формате [дд, мм, гггг]
+        """
+        if not self.conn:
+            await self.connect()
+        res = await self.conn.execute("""
+                SELECT date('now');
+            """)
+        data = await res.fetchone()
+        await self.close()
+        return data[0].split("-")[::-1]
+
+
     async def add_task(self, task: Task, id_from_user:int):
         if not self.conn:
             await self.connect()
@@ -79,10 +79,6 @@ class Repo:
             """,(task.name,task.deadline,task.priority,task.note,id_from_user))
         await self.conn.commit()
         await self.close()
-
-
-    def __check_params(self, param_for_change):
-        return (param_for_change in ("name","created_at","deadline","priority","note", "completed"))
 
 
     async def edit_task(self, user_id, id_task, param_for_change, new_value):
@@ -104,28 +100,6 @@ class Repo:
             await self.close()
         else:
             print("Parameter check failed")
-
-
-    async def delete_task(self, id_task):
-        if not self.conn:
-            await self.connect()
-        await self.conn.execute("""
-            DELETE FROM tasks WHERE id = ?;
-            """, (id_task,))
-        await self.conn.commit()
-        await self.close()
-
-
-    async def task_is_complete(self, id_task):
-        if not self.conn:
-            await self.connect()
-        await self.conn.execute("""
-                UPDATE tasks
-                SET completed = 1
-                WHERE id = ?;
-            """, (id_task,),)
-        await self.conn.commit()
-        await self.close()
 
 
     async def show_tasks(self, id_from_user, param_for_sort=None, sort_key=None) -> list:
@@ -167,19 +141,26 @@ class Repo:
         return [dict(row) for row in rows]
 
 
-    async def search_by_id(self, user_id:int, task_id:int):
+    async def delete_task(self, id_task):
         if not self.conn:
             await self.connect()
-        res = await self.conn.execute("""
-                        SELECT * FROM tasks
-                        WHERE user_id = ? AND id = ?;
-                        """, (user_id, task_id))
-        task = await res.fetchone()
+        await self.conn.execute("""
+            DELETE FROM tasks WHERE id = ?;
+            """, (id_task,))
+        await self.conn.commit()
         await self.close()
-        return [dict(task)]
 
 
-
+    async def task_is_complete(self, id_task):
+        if not self.conn:
+            await self.connect()
+        await self.conn.execute("""
+                UPDATE tasks
+                SET completed = 1
+                WHERE id = ?;
+            """, (id_task,),)
+        await self.conn.commit()
+        await self.close()
 
 
     async def search_task(self, key_word:str) -> Task:
@@ -202,7 +183,30 @@ class Repo:
         await self.close()
         return res_task
 
+
+    async def search_by_id(self, user_id:int, task_id:int):
+        if not self.conn:
+            await self.connect()
+        res = await self.conn.execute("""
+                        SELECT * FROM tasks
+                        WHERE user_id = ? AND id = ?;
+                        """, (user_id, task_id))
+        task = await res.fetchone()
+        await self.close()
+        return [dict(task)]
+
+
+# служебные\дополнительные
+
+    def __check_params(self, param_for_change:str) -> bool:
+        return (param_for_change in ("name","created_at","deadline","priority","note", "completed"))
+
+
     async def is_exist(self, user_id:str, task_name:str) -> bool:
+        """
+        проверяет есть ли у юзера уже таска с таким именем,
+        которое он хочет присвоить новой
+        """
         if not self.conn:
             await self.connect()
         res = await self.conn.execute("""
