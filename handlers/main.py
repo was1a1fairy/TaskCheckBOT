@@ -198,7 +198,7 @@ async def chose_param(callback:CallbackQuery):
 @router2.callback_query(F.data=="dead_desc")
 async def dead_desc(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await   for_main.view_tasks(callback.from_user.id, "deadline", "DESC")
+    array = await   for_main.view_tasks(callback.from_user.id, "deadline", "ASC")
 
     if not array:
         await callback.message.answer("У вас пока нет задач(")
@@ -210,7 +210,8 @@ async def dead_desc(callback: CallbackQuery):
 
     builder.adjust(1)
 
-    await callback.message.answer("Ваши задачи:", reply_markup=builder.as_markup())
+    await callback.message.answer("Ваши задачи, отсортированные по времени истечения дедлайна."
+                                  "Сначала самые срочные:", reply_markup=builder.as_markup())
     await callback.answer()
 
 
@@ -220,7 +221,7 @@ async def priority_high(callback: CallbackQuery):
     array = await   for_main.view_tasks(
         callback.from_user.id,
         "priority",
-        "DESC" if callback.data=="priority_high" else "ASC"
+        "ASC" if callback.data=="priority_high" else "DESC"
     )
 
     if not array:
@@ -233,7 +234,9 @@ async def priority_high(callback: CallbackQuery):
 
     builder.adjust(1)
 
-    await callback.message.answer("Ваши задачи:", reply_markup=builder.as_markup())
+    await callback.message.answer("Сначала выбранные - потом остальные.\n"
+                                  "Если задач выбранного приоритета нет, сразу выведутся остальные.\n"
+                                  "Ваши задачи:", reply_markup=builder.as_markup())
     await callback.answer()
 
 
@@ -243,7 +246,7 @@ async def long_note(callback: CallbackQuery):
     array = await   for_main.view_tasks(
         callback.from_user.id,
         "note",
-        "ASC" if callback.data=="long_note" else "DESC"
+        "DESC" if callback.data=="long_note" else "ASC"
     )
 
     if not array:
@@ -266,11 +269,11 @@ async def completed(callback: CallbackQuery):
     array = await   for_main.view_tasks(
         callback.from_user.id,
         "completed",
-        "DESC" if "completed" else "ASC"
+        "1" if callback.data == "completed" else "0"
     )
 
     if not array:
-        await callback.message.answer("У вас пока нет задач(")
+        await callback.message.answer("У вас пока нет задач выбранного типа(")
         await callback.answer()
         return
 
@@ -279,12 +282,17 @@ async def completed(callback: CallbackQuery):
 
     builder.adjust(1)
 
-    await callback.message.answer("Ваши задачи:", reply_markup=builder.as_markup())
+    textblock = await for_main.translate_completed(callback.data)
+
+    await callback.message.answer(f"Ваши {textblock} задачи:", reply_markup=builder.as_markup())
     await callback.answer()
 
 
 @router2.callback_query(lambda data: data.data and data.data.startswith("task-"))
 async def list_tasks(callback: CallbackQuery):
+    """
+    выводит конкретную таску
+    """
     task_id = int(callback.data[5::])
     user_id = callback.from_user.id
     print(user_id)

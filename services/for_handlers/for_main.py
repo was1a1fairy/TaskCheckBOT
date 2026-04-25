@@ -11,6 +11,14 @@ async def add_task(data:dict, id_user):
     task = models.Task(name=data["name"], deadline=data["deadline"], priority=data["priority"], note=data["note"])
     await bd.add_task(task, id_user)
 
+async def translate_completed(param:str) -> str:
+    """
+    используется только в сортировке по complete для view_tasks,
+    чтобы покрасивше вывести задачи
+    """
+    if param == "completed":
+        return "выполненные"
+    return "невыполненные"
 
 async def view_tasks(id_user, param=None, key=None) -> list[list]:
     bd = await db.Repo().create_db()

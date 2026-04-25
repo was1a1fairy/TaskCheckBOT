@@ -128,7 +128,7 @@ class Repo:
         await self.close()
 
 
-    async def show_tasks(self, id_from_user, param_for_sort=None,sort_key=None) -> list:
+    async def show_tasks(self, id_from_user, param_for_sort=None, sort_key=None) -> list:
         """
         имеется возможность сортировки
         !по дате:
@@ -138,7 +138,7 @@ class Repo:
         !по дедлайну:
         (asc - сначала кончающийся дедлайн(самые срочные), desc - от менее срочных к срочным)
         !выполнены или нет:
-        (asc - сначала невыполненные, desc - сначала выполненные)
+        (0 - покажет только невыполненные, 1 - только выполненные)
         """
 
         if not self.conn:
@@ -149,7 +149,13 @@ class Repo:
                 WHERE user_id = ?;
                 """, (id_from_user,))
         elif self.__check_params(param_for_sort):
-            res = await self.conn.execute(f"""
+            if param_for_sort=="completed":
+                res = await self.conn.execute(f"""
+                                SELECT * FROM tasks WHERE user_id = ?
+                                AND completed = ?;
+                                """, (id_from_user, sort_key))
+            else:
+                res = await self.conn.execute(f"""
                 SELECT * FROM tasks WHERE user_id = ?
                 ORDER BY {param_for_sort} {sort_key};
                 """, (id_from_user,))
