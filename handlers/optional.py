@@ -18,6 +18,8 @@ class StatesOPTIONAL(StatesGroup):
     note = State()
 
 
+# edit task:
+
 @router3.message(lambda message: message.text == "редактировать задачу")
 async def edit_task(message: types.Message):
     builder = InlineKeyboardBuilder()
@@ -109,6 +111,34 @@ async def editing_complete(event:types.Message|types.CallbackQuery, state: FSMCo
     await for_optional.edit_task(await state.get_data(), user_id)
     await state.clear()
     await event.answer("Данные успешно обновлены!")
+
+
+# delete task:
+
+@router3.message(lambda message: message.text == "удалить задачу")
+async def delete_task(message: types.Message):
+    print("ау")
+    builder = InlineKeyboardBuilder()
+    array = await for_optional.view_tasks(message.from_user.id)
+
+    if not array:
+        await message.answer("У вас пока нет задач(")
+        return
+
+    for task in array:
+        builder.button(text=task[1], callback_data=f"del{task[0]}")
+
+    builder.adjust(1)
+
+    await message.answer("Выберите задачу для удаления:", reply_markup=builder.as_markup())
+
+
+@router3.callback_query(F.data.startswith("del"))
+async def delete(callback:types.CallbackQuery):
+    print(callback.data)
+    task_id = int(callback.data[3:])
+    await for_optional.delete_task(task_id)
+    await callback.message.edit_text("Задача была удалена!")
 
 
 @router3.message(lambda message: True)
