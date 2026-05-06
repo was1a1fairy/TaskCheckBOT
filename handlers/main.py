@@ -181,18 +181,18 @@ async def first_new(callback: CallbackQuery):
 async def chose_param(callback:CallbackQuery):
     builder = InlineKeyboardBuilder()
 
-    builder.button(text="заканчивающимся дедлайном",callback_data="dead_desc")
-    builder.button(text="высоким приоритетом", callback_data="priority_high")
-    builder.button(text="низким приоритетом", callback_data="priority_low")
-    builder.button(text="самым длинным описанием", callback_data="long_note")
-    builder.button(text="самым коротким описанием", callback_data="short_note")
+    builder.button(text="сначала с заканчивающимся дедлайном",callback_data="dead_desc")
+    builder.button(text="с высоким приоритетом", callback_data="priority_high")
+    builder.button(text="с низким приоритетом", callback_data="priority_low")
+    builder.button(text="сначала с длинным описанием", callback_data="long_note")
+    builder.button(text="сначала с коротким описанием", callback_data="short_note")
     builder.button(text="выполненные", callback_data="completed")
     builder.button(text="невыполненные", callback_data="no_completed")
     builder.button(text="вернуться в начало", callback_data="exit")
 
     builder.adjust(1)
 
-    await callback.message.answer("Показать сначала задачи с:", reply_markup=builder.as_markup())
+    await callback.message.answer("Выберите как показать ваши задачи:", reply_markup=builder.as_markup())
 
 
 @router2.callback_query(F.data=="dead_desc")
@@ -221,7 +221,7 @@ async def priority_high(callback: CallbackQuery):
     array = await   for_main.view_tasks(
         callback.from_user.id,
         "priority",
-        "ASC" if callback.data=="priority_high" else "DESC"
+        "high" if callback.data=="priority_high" else "low"
     )
 
     if not array:
@@ -234,9 +234,7 @@ async def priority_high(callback: CallbackQuery):
 
     builder.adjust(1)
 
-    await callback.message.answer("Сначала выбранные - потом остальные.\n"
-                                  "Если задач выбранного приоритета нет, сразу выведутся остальные.\n"
-                                  "Ваши задачи:", reply_markup=builder.as_markup())
+    await callback.message.answer("Вот подходящие:", reply_markup=builder.as_markup())
     await callback.answer()
 
 
@@ -266,7 +264,7 @@ async def long_note(callback: CallbackQuery):
 @router2.callback_query(lambda f: f.data in ("completed","no_completed"))
 async def completed(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
-    array = await   for_main.view_tasks(
+    array = await for_main.view_tasks(
         callback.from_user.id,
         "completed",
         "1" if callback.data == "completed" else "0"

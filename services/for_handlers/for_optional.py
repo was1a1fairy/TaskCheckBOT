@@ -34,3 +34,8 @@ async def view_tasks(id_user, param=None, key=None) -> list[list]:
 async def delete_task(id_task:int):
     bd = await db.Repo().connect()
     await bd.delete_task(id_task)
+
+
+async def complete_task(id_task:int):
+    bd = await db.Repo().connect()
+    await bd.complete(id_task)

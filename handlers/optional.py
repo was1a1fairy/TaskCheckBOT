@@ -101,7 +101,7 @@ async def save_priority(message: types.Message, state:FSMContext):
     await editing_complete(message,state)
 
 
-@router3.message(StatesOPTIONAL.__all_states__)
+# @router3.message()
 @router3.callback_query(lambda f: f.data == "something")
 async def editing_complete(event:types.Message|types.CallbackQuery, state: FSMContext):
     user_id = event.from_user.id
@@ -117,7 +117,6 @@ async def editing_complete(event:types.Message|types.CallbackQuery, state: FSMCo
 
 @router3.message(lambda message: message.text == "удалить задачу")
 async def delete_task(message: types.Message):
-    print("ау")
     builder = InlineKeyboardBuilder()
     array = await for_optional.view_tasks(message.from_user.id)
 
@@ -135,10 +134,35 @@ async def delete_task(message: types.Message):
 
 @router3.callback_query(F.data.startswith("del"))
 async def delete(callback:types.CallbackQuery):
-    print(callback.data)
     task_id = int(callback.data[3:])
     await for_optional.delete_task(task_id)
     await callback.message.edit_text("Задача была удалена!")
+
+
+# set complete status for task
+
+@router3.message(lambda message: message.text == "отметить выполнение")
+async def set_status_complete(message: types.Message):
+    builder = InlineKeyboardBuilder()
+    array = await for_optional.view_tasks(message.from_user.id)
+
+    if not array:
+        await message.answer("У вас пока нет задач(")
+        return
+
+    for task in array:
+        builder.button(text=task[1], callback_data=f"set{task[0]}")
+
+    builder.adjust(1)
+
+    await message.answer("Выберите задачу для отметки выполнения:", reply_markup=builder.as_markup())
+
+
+@router3.callback_query(F.data.startswith("set"))
+async def complete(callback:types.CallbackQuery):
+    task_id = int(callback.data[3:])
+    await for_optional.complete_task(task_id)
+    await callback.message.edit_text("Вы выполнили задачу!")
 
 
 @router3.message(lambda message: True)
