@@ -1,5 +1,5 @@
 import aiosqlite
-from models import Task
+from models import Task,User
 
 class Repo:
 
@@ -25,12 +25,25 @@ class Repo:
 
 
 
-    async def create_db(self):
+    async def create_tables(self):
         if not self.conn:
             await self.connect()
         await self.conn.execute("""
             PRAGMA foreign_keys = ON;
         """)
+        await self.conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS users
+                (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                tg_id TEXT NOT NULL,
+                email TEXT NOT NULL,
+                password TEXT NOT NULL,
+                register_at TEXT NOT NULL
+                ) 
+            """
+        )
         await self.conn.execute(
             """
             CREATE TABLE IF NOT EXISTS tasks
@@ -42,7 +55,8 @@ class Repo:
                 priority TEXT DEFAULT 'low',
                 note TEXT,
                 completed INTEGER DEFAULT 0,
-                user_id INTEGER NOT NULL
+                user_id INTEGER NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id)
                 ) 
             """
         )
@@ -50,22 +64,36 @@ class Repo:
         await self.close()
         return self
 
+# добавление пользователя(регистрация)
 
-# предметные/главные
+    async def register(self, user: User, id_from_user:int):
+        if not self.conn:
+            await self.connect()
+        await self.conn.execute("""
+                INSERT INTO users
+                (tg_id, email, password, register_at)
+                VALUES
+                (?,?,?,datetime('now'))
+            """,(id_from_user,user.email,user.password))
+        await self.conn.commit()
+        await self.close()
 
-    async def date_now(self):
-        """
 
-        :return: дату в формате [дд, мм, гггг]
-        """
+    async def search_user(self, user_id:int):
         if not self.conn:
             await self.connect()
         res = await self.conn.execute("""
-                SELECT date('now');
-            """)
-        data = await res.fetchone()
+                        SELECT * FROM users
+                        WHERE tg_id = ?;
+                        """, (user_id,))
+        if not res:
+            return False
+        user = await res.fetchone()
         await self.close()
-        return data[0].split("-")[::-1]
+        return [dict(user)]
+
+
+# предметные/главные
 
 
     async def add_task(self, task: Task, id_from_user:int):
@@ -86,8 +114,8 @@ class Repo:
         if not self.conn:
             await self.connect()
 
-        print(f"__check_params result: {self.__check_params(param_for_change)}")
-        if self.__check_params(param_for_change):
+        print(f"__check_params result: {Repo.__check_params(param_for_change)}")
+        if Repo.__check_params(param_for_change):
             cursor = await self.conn.execute(f"""
                 UPDATE tasks
                 SET {param_for_change} = ?
@@ -122,11 +150,11 @@ class Repo:
                 SELECT * FROM tasks
                 WHERE user_id = ?;
                 """, (id_from_user,))
-        elif self.__check_params(param_for_sort):
-            if param_for_sort=="completed":
+        elif Repo.__check_params(param_for_sort):
+            if param_for_sort in ("completed","priority"):
                 res = await self.conn.execute(f"""
                                 SELECT * FROM tasks WHERE user_id = ?
-                                AND completed = ?;
+                                AND {param_for_sort} = ?;
                                 """, (id_from_user, sort_key))
             else:
                 res = await self.conn.execute(f"""
@@ -151,7 +179,7 @@ class Repo:
         await self.close()
 
 
-    async def task_is_complete(self, id_task):
+    async def complete(self, id_task):
         if not self.conn:
             await self.connect()
         await self.conn.execute("""
@@ -184,6 +212,8 @@ class Repo:
         return res_task
 
 
+# служебные\дополнительные
+
     async def search_by_id(self, user_id:int, task_id:int):
         if not self.conn:
             await self.connect()
@@ -196,10 +226,10 @@ class Repo:
         return [dict(task)]
 
 
-# служебные\дополнительные
 
-    def __check_params(self, param_for_change:str) -> bool:
-        return (param_for_change in ("name","created_at","deadline","priority","note", "completed"))
+    @staticmethod
+    def __check_params(param_for_change:str) -> bool:
+        return param_for_change in ("name","created_at","deadline","priority","note", "completed")
 
 
     async def is_exist(self, user_id:str, task_name:str) -> bool:
@@ -218,3 +248,18 @@ class Repo:
         if res:
             return 1
         return 0
+
+
+    async def date_now(self):
+        """
+
+        :return: дату в формате [дд, мм, гггг]
+        """
+        if not self.conn:
+            await self.connect()
+        res = await self.conn.execute("""
+                SELECT date('now');
+            """)
+        data = await res.fetchone()
+        await self.close()
+        return data[0].split("-")[::-1]
