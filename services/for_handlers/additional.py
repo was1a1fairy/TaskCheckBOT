@@ -6,7 +6,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import db
 
 async def create_db():
-    bd = await db.Repo().create_db()
+    bd = await db.Repo().create_tables()
     return bd
 
 

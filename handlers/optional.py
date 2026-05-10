@@ -8,7 +8,7 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.types import CallbackQuery
 
 
-router3 = Router()
+router = Router()
 
 class StatesOPTIONAL(StatesGroup):
     id = State()
@@ -20,7 +20,7 @@ class StatesOPTIONAL(StatesGroup):
 
 # edit task:
 
-@router3.message(lambda message: message.text == "редактировать задачу")
+@router.message(lambda message: message.text == "редактировать задачу")
 async def edit_task(message: types.Message):
     builder = InlineKeyboardBuilder()
     array = await for_optional.view_tasks(message.from_user.id)
@@ -37,20 +37,20 @@ async def edit_task(message: types.Message):
     await message.answer("Выберите задачу для изменения:", reply_markup=builder.as_markup())
 
 
-@router3.callback_query(lambda data: data.data and data.data.startswith("task"))
+@router.callback_query(lambda data: data.data and data.data.startswith("task"))
 async def chose_changes(callback: CallbackQuery, state:FSMContext):
     task_id = int(callback.data[4::])
     await state.update_data(id=task_id)
     await callback.message.answer("Изменить:",reply_markup= await for_optional.inline())
 
 
-@router3.callback_query(F.data=="edit_name")
+@router.callback_query(F.data=="edit_name")
 async def edit_name(callback:types.CallbackQuery, state:FSMContext):
     await state.set_state(StatesOPTIONAL.name)
     await callback.message.answer("Введите новое имя:")
 
 
-@router3.message(StatesOPTIONAL.name)
+@router.message(StatesOPTIONAL.name)
 async def try_save_name(message: types.Message, state: FSMContext):
     print(message.text, message.from_user.id)
     res = await additional.is_task_exists(message.from_user.id, message.text)
@@ -62,47 +62,47 @@ async def try_save_name(message: types.Message, state: FSMContext):
                             reply_markup=additional.something("something").as_markup())
 
 
-@router3.callback_query(F.data=="edit_deadline")
+@router.callback_query(F.data=="edit_deadline")
 async def edit_deadline(callback:types.CallbackQuery, state:FSMContext):
     await state.set_state(StatesOPTIONAL.deadline)
     await callback.message.answer("Введите новый дедлайн:")
 
 
-@router3.message(StatesOPTIONAL.deadline)
+@router.message(StatesOPTIONAL.deadline)
 async def try_save_deadline(message: types.Message, state: FSMContext):
     print(message.text, message.from_user.id)
     await additional.try_deadline(message,state,"something")
 
 
-@router3.callback_query(F.data=="edit_priority")
+@router.callback_query(F.data=="edit_priority")
 async def edit_priority(callback:types.CallbackQuery, state:FSMContext):
     await state.set_state(StatesOPTIONAL.priority)
     await callback.message.answer("Выберите новый приоритет:",
                                   reply_markup=await additional.choice_priority())
 
 
-@router3.callback_query(StatesOPTIONAL.priority)
-@router3.callback_query(lambda bebebe: bebebe.data in ("high", "medium", "low"))
+@router.callback_query(StatesOPTIONAL.priority)
+@router.callback_query(lambda bebebe: bebebe.data in ("high", "medium", "low"))
 async def save_priority(callback: types.CallbackQuery, state:FSMContext):
     await state.update_data(priority=callback.data)
     await editing_complete(callback,state)
     await callback.answer()
 
 
-@router3.callback_query(F.data=="edit_note")
+@router.callback_query(F.data=="edit_note")
 async def edit_note(callback:types.CallbackQuery, state:FSMContext):
     await state.set_state(StatesOPTIONAL.note)
     await callback.message.answer("Введите новое описание:")
 
 
-@router3.message(StatesOPTIONAL.note)
+@router.message(StatesOPTIONAL.note)
 async def save_priority(message: types.Message, state:FSMContext):
     await state.update_data(note=message.text)
     await editing_complete(message,state)
 
 
-# @router3.message()
-@router3.callback_query(lambda f: f.data == "something")
+# @router.message()
+@router.callback_query(lambda f: f.data == "something")
 async def editing_complete(event:types.Message|types.CallbackQuery, state: FSMContext):
     user_id = event.from_user.id
     if isinstance(event, types.CallbackQuery):
@@ -115,7 +115,7 @@ async def editing_complete(event:types.Message|types.CallbackQuery, state: FSMCo
 
 # delete task:
 
-@router3.message(lambda message: message.text == "удалить задачу")
+@router.message(lambda message: message.text == "удалить задачу")
 async def delete_task(message: types.Message):
     builder = InlineKeyboardBuilder()
     array = await for_optional.view_tasks(message.from_user.id)
@@ -132,7 +132,7 @@ async def delete_task(message: types.Message):
     await message.answer("Выберите задачу для удаления:", reply_markup=builder.as_markup())
 
 
-@router3.callback_query(F.data.startswith("del"))
+@router.callback_query(F.data.startswith("del"))
 async def delete(callback:types.CallbackQuery):
     task_id = int(callback.data[3:])
     await for_optional.delete_task(task_id)
@@ -141,7 +141,7 @@ async def delete(callback:types.CallbackQuery):
 
 # set complete status for task
 
-@router3.message(lambda message: message.text == "отметить выполнение")
+@router.message(lambda message: message.text == "отметить выполнение")
 async def set_status_complete(message: types.Message):
     builder = InlineKeyboardBuilder()
     array = await for_optional.view_tasks(message.from_user.id)
@@ -158,13 +158,8 @@ async def set_status_complete(message: types.Message):
     await message.answer("Выберите задачу для отметки выполнения:", reply_markup=builder.as_markup())
 
 
-@router3.callback_query(F.data.startswith("set"))
+@router.callback_query(F.data.startswith("set"))
 async def complete(callback:types.CallbackQuery):
     task_id = int(callback.data[3:])
     await for_optional.complete_task(task_id)
     await callback.message.edit_text("Вы выполнили задачу!")
-
-
-@router3.message(lambda message: True)
-async def handler(message: types.Message):
-    await message.reply("Я не умею распознавать сообщения, воспользуйся пожалуйста командой или меню!\n/help")

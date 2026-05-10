@@ -21,15 +21,13 @@ async def translate_completed(param:str) -> str:
     return "невыполненные"
 
 async def view_tasks(id_user, param=None, key=None) -> list[list]:
-    bd = await db.Repo().create_db()
-    task_dict = await bd.show_tasks(id_user, param,key)
+    task_dict = await db.Repo().show_tasks(id_user, param,key)
     return await additional.create_output(task_dict)
 
 
 
 async def format_output_task(user_id:int, task_id:int):
-    bd = await db.Repo().connect()
-    data_db = await bd.search_by_id(user_id, task_id)
+    data_db = await db.Repo().search_by_id(user_id, task_id)
     task = await additional.create_output(data_db)
     meow = (
         f"*task:* {task[0][1]}\n\n"

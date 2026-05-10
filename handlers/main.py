@@ -7,7 +7,7 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from services.for_handlers import for_main, additional
 
-router2 = Router()
+router = Router()
 
 
 class StatesMAIN(StatesGroup):
@@ -21,8 +21,8 @@ class StatesMAIN(StatesGroup):
 # ниже базовые хендлеры для создания и просмотра задач
 
 
-@router2.message(lambda message: message.text == "добавить задачу")
-@router2.callback_query(F.data == "добавить задачу")
+@router.message(lambda message: message.text == "добавить задачу")
+@router.callback_query(F.data == "добавить задачу")
 async def add_task(event: types.CallbackQuery | types.Message, state: FSMContext):
     if isinstance(event, types.CallbackQuery):
         await event.message.answer("Придумайте название вашей задачи:")
@@ -32,7 +32,7 @@ async def add_task(event: types.CallbackQuery | types.Message, state: FSMContext
     await state.set_state(StatesMAIN.name)
 
 
-@router2.message(StatesMAIN.name)
+@router.message(StatesMAIN.name)
 async def try_save_name(message: types.Message, state: FSMContext):
     res = await additional.is_task_exists(message.from_user.id, message.text)
     if isinstance(res, str):
@@ -43,19 +43,25 @@ async def try_save_name(message: types.Message, state: FSMContext):
                             reply_markup=additional.something("somethingg").as_markup())
 
 
-@router2.callback_query(F.data=="somethingg")
+@router.callback_query(F.data=="somethingg")
 async def save_name_ask_deadline(callback:types.CallbackQuery, state:FSMContext):
     await callback.message.reply("Теперь укажи до какого числа нужно выполнить задачу"
                         "(дедлайн указывается в формате дд.мм.гггг)")
     await state.set_state(StatesMAIN.deadline)
 
 
-@router2.message(StatesMAIN.deadline)
+
+@router.message(StatesMAIN.deadline)
 async def try_save_deadline(message: types.Message, state: FSMContext):
-    await additional.try_deadline(message,state,"True")
+    try:
+        await additional.try_deadline(message, state, "True")
+    except Exception as e:
+        print(f"ОШИБКА ТУТ: {e}")
+        await message.answer(f"Произошла ошибка: {e}")
 
 
-@router2.callback_query(F.data=="True")
+
+@router.callback_query(F.data=="True")
 async def ask_priority(callback: types.CallbackQuery, state:FSMContext):
 
     await callback.bot.edit_message_reply_markup(
@@ -80,8 +86,8 @@ async def ask_priority(callback: types.CallbackQuery, state:FSMContext):
                          )
     await state.set_state(StatesMAIN.priority)
 
-@router2.callback_query(StatesMAIN.priority)
-# @router2.callback_query(lambda bebebe: bebebe.data in ("high", "medium", "low"))
+@router.callback_query(StatesMAIN.priority)
+# @router.callback_query(lambda bebebe: bebebe.data in ("high", "medium", "low"))
 async def save_priority_ask_note(callback: types.CallbackQuery, state:FSMContext):
     await state.update_data(priority=callback.data)
     await callback.message.reply("Супер! Теперь напиши об этой задаче подробнее и мы добавим ее в календарь!")
@@ -89,7 +95,7 @@ async def save_priority_ask_note(callback: types.CallbackQuery, state:FSMContext
     await state.set_state(StatesMAIN.note)
 
 
-@router2.message(StatesMAIN.note)
+@router.message(StatesMAIN.note)
 async def save_note_getkb(message: types.Message, state:FSMContext):
     await state.update_data(note=message.text.strip())
     await for_main.add_task(await state.get_data(), message.from_user.id)
@@ -102,8 +108,8 @@ async def save_note_getkb(message: types.Message, state:FSMContext):
     await state.clear()
 
 
-@router2.message(lambda message: message.text == "список задач")
-@router2.callback_query(F.data == "список задач")
+@router.message(lambda message: message.text == "список задач")
+@router.callback_query(F.data == "список задач")
 async def view_tasks(event: (types.CallbackQuery | types.Message)):
     builder = InlineKeyboardBuilder()
 
@@ -135,7 +141,7 @@ async def view_tasks(event: (types.CallbackQuery | types.Message)):
                                    )
 
 
-@router2.callback_query(F.data=="sort")
+@router.callback_query(F.data=="sort")
 async def sort(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(callback.from_user.id)
@@ -154,7 +160,7 @@ async def sort(callback: CallbackQuery):
     await callback.answer()
 
 
-@router2.callback_query(lambda bebebe: bebebe.data in ("first_new","first_old"))
+@router.callback_query(lambda bebebe: bebebe.data in ("first_new","first_old"))
 async def first_new(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     array = await   for_main.view_tasks(
@@ -177,7 +183,7 @@ async def first_new(callback: CallbackQuery):
     await callback.answer()
 
 
-@router2.callback_query(F.data=="chose_param")
+@router.callback_query(F.data=="chose_param")
 async def chose_param(callback:CallbackQuery):
     builder = InlineKeyboardBuilder()
 
@@ -195,7 +201,7 @@ async def chose_param(callback:CallbackQuery):
     await callback.message.answer("Выберите как показать ваши задачи:", reply_markup=builder.as_markup())
 
 
-@router2.callback_query(F.data=="dead_desc")
+@router.callback_query(F.data=="dead_desc")
 async def dead_desc(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     array = await   for_main.view_tasks(callback.from_user.id, "deadline", "ASC")
@@ -215,7 +221,7 @@ async def dead_desc(callback: CallbackQuery):
     await callback.answer()
 
 
-@router2.callback_query(lambda bebebe: bebebe.data in ("priority_high","priority_low"))
+@router.callback_query(lambda bebebe: bebebe.data in ("priority_high","priority_low"))
 async def priority_high(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     array = await   for_main.view_tasks(
@@ -238,7 +244,7 @@ async def priority_high(callback: CallbackQuery):
     await callback.answer()
 
 
-@router2.callback_query(lambda f: f.data in ("long_note","short_note"))
+@router.callback_query(lambda f: f.data in ("long_note","short_note"))
 async def long_note(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     array = await   for_main.view_tasks(
@@ -261,7 +267,7 @@ async def long_note(callback: CallbackQuery):
     await callback.answer()
 
 
-@router2.callback_query(lambda f: f.data in ("completed","no_completed"))
+@router.callback_query(lambda f: f.data in ("completed","no_completed"))
 async def completed(callback: CallbackQuery):
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(
@@ -286,7 +292,7 @@ async def completed(callback: CallbackQuery):
     await callback.answer()
 
 
-@router2.callback_query(lambda data: data.data and data.data.startswith("task-"))
+@router.callback_query(lambda data: data.data and data.data.startswith("task-"))
 async def list_tasks(callback: CallbackQuery):
     """
     выводит конкретную таску

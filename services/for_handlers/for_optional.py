@@ -27,15 +27,12 @@ async def edit_task(data:dict, user_id):
 
 
 async def view_tasks(id_user, param=None, key=None) -> list[list]:
-    bd = await db.Repo().connect()
-    task_dict = await bd.show_tasks(id_user, param,key)
+    task_dict = await db.Repo().show_tasks(id_user, param,key)
     return await additional.create_output(task_dict)
 
 async def delete_task(id_task:int):
-    bd = await db.Repo().connect()
-    await bd.delete_task(id_task)
+    await db.Repo().delete_task(id_task)
 
 
 async def complete_task(id_task:int):
-    bd = await db.Repo().connect()
-    await bd.complete(id_task)
+    await db.Repo().complete(id_task)

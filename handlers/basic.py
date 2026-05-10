@@ -6,12 +6,11 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 import services.for_handlers.additional as additional
 
-router1 = Router()
+router = Router()
 
 
-@router1.message(filters.Command("start"))
+@router.message(filters.Command("start"))
 async def start(message: types.Message):
-    await additional.create_db()
     builder = InlineKeyboardBuilder()
 
     builder.button(text="добавить задачу!",
@@ -33,7 +32,7 @@ async def start(message: types.Message):
                          )
 
 
-@router1.callback_query(F.data=="help")
+@router.callback_query(F.data=="help")
 async def helpp(callback: CallbackQuery, state: FSMContext):
     await callback.message.reply(f"""Тебе нужна помощь?
     Давай объясню что я умею и покажу как пользоваться моими командами!\n
@@ -42,7 +41,7 @@ async def helpp(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-@router1.callback_query(F.data=="exit")
+@router.callback_query(F.data=="exit")
 async def exitt(callback:CallbackQuery,state: FSMContext):
     builder = InlineKeyboardBuilder()
 
