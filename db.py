@@ -54,8 +54,7 @@ class Repo:
                 priority TEXT DEFAULT 'low',
                 note TEXT,
                 completed INTEGER DEFAULT 0,
-                user_tg_id INTEGER NOT NULL,
-                FOREIGN KEY (user_tg_id) REFERENCES users(tg_id)
+                user_tg_id INTEGER NOT NULL
                 )
             """)
 

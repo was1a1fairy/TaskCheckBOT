@@ -27,7 +27,7 @@ async def main():
     dp.include_routers(login.router)
     repo = Repo("repo.db")
     try:
-        await repo.connect()
+        repo = await repo.connect()
         await dp.start_polling(bot, repo=repo)
     finally:
         await repo.close()

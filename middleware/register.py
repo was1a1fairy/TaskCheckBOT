@@ -25,21 +25,17 @@ class Register(BaseMiddleware):
 
         repo: Repo = data.get("repo")
 
-        if repo is None:
-            print("Error: repo is None in middleware")
-            return await handler(event, data)
-
         user_id = message.from_user.id
 
         if message.text == "продолжить без регистрации":
             self.users.append(user_id)
             return await handler(event, data)
 
-        try:
-            user_exists = await repo.search_user(user_id)
-        except Exception as e:
-            print(f"Database error in register middleware: {e}")
-            user_exists = False
+        if message.text == "зарегистрироваться" or message.text == "войти" or :
+            # как мне проверить state.......................
+            return await handler(event, data)
+
+        user_exists = await repo.search_user(user_id)
 
         if user_id in self.users or user_exists:
             return await handler(event, data)

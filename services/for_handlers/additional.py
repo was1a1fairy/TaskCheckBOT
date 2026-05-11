@@ -43,7 +43,7 @@ async def choice_priority():
     return builder.as_markup()
 
 
-async def check_deadline(deadline) -> bool:
+async def check_deadline(deadline, db) -> bool:
     """
     проверяет корректность введения дедлайна
     :param deadline: дд.мм.гггг
@@ -68,7 +68,7 @@ async def check_deadline(deadline) -> bool:
     if (31 < day or day < 0) or (0 > month or month > 12) or len(str(year)) != 4:
         return False
 
-    now = await db.Repo().date_now()
+    now = await db.date_now()
     if now[2] > deadline[2]:
         raise ValueError("заданный пользователем дедлайн раньше сегодняшнего дня")
     elif now[2] == deadline[2]:
@@ -86,21 +86,22 @@ def something(text):
     return keyboard
 
 
-async def try_deadline(message, state, point):
+async def try_deadline(message, state, db):
     deadline = message.text.strip()
     try:
-        await check_deadline(deadline)
+        await check_deadline(deadline, db)
     except ValueError:
         await message.reply("ёклмн! Твой дедлайн должен быть не раньше сегодняшнего дня!\nПопробуй снова:")
+        raise ValueError
     else:
-        if await check_deadline(deadline):
+        if await check_deadline(deadline, db):
             await state.update_data(deadline=message.text.strip())
-            await message.reply("Дедлайн успешно установлен! Нажми что-нибудь чтобы продолжить",
-                                reply_markup=something(point).as_markup())
+            await message.reply("Дедлайн успешно установлен!")
         else:
             await message.reply("ёклмн! Твой дедлайн должен быть в формате дд.мм.гггг!\nПопробуй снова:")
+            raise ValueError
 
 
-async def is_task_exists(user_id, task_name:str):
-    if await db.Repo().is_exist(user_id=user_id,task_name=task_name):
+async def is_task_exists(user_id, task_name:str, db):
+    if await db.is_exist(user_id=user_id,task_name=task_name):
         return "Сорри, у тебя уже существует задача с таким именем, выбери другое!"
