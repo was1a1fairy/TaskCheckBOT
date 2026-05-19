@@ -1,12 +1,11 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+
+from db import Repo
 from services.for_handlers import additional
-import db
 
 
 async def inline():
-    """
-    выбор параметра для изменения
-    """
+    """Создает клавиатуру выбора параметра для изменения"""
     builder=InlineKeyboardBuilder()
 
     builder.button(text="имя",callback_data="edit_name")
@@ -18,21 +17,23 @@ async def inline():
     return builder.as_markup()
 
 
-async def edit_task(data:dict, user_id):
-    print(f"Data received: {data}")
+async def edit_task(data: dict, user_id: int, repo: Repo) -> None:
+    """Редактирует задачу"""
     for key in data:
-        print(f"Key: {key}, Value: {data[key]}")
-        if key!="id" and data[key]:
-            await db.Repo().edit_task(user_id,data["id"],key,data[key])
+        if key != "id" and data[key]:
+            await repo.edit_task(user_id, data["id"], key, data[key])
 
 
-async def view_tasks(id_user, param=None, key=None) -> list[list]:
-    task_dict = await db.Repo().show_tasks(id_user, param,key)
+async def view_tasks(id_user: int, repo: Repo, param: str = None, key: str = None) -> list[list]:
+    """Показывает задачи пользователя"""
+    task_dict = await repo.show_tasks(id_user, param,key)
     return await additional.create_output(task_dict)
 
-async def delete_task(id_task:int):
-    await db.Repo().delete_task(id_task)
+async def delete_task(id_task: int, repo: Repo) -> None:
+    """Удаляет задачу"""
+    await repo.delete_task(id_task)
 
 
-async def complete_task(id_task:int):
-    await db.Repo().complete(id_task)
+async def complete_task(id_task: int, repo: Repo) -> None:
+    """Отмечает задачу как выполненную"""
+    await repo.complete(id_task)

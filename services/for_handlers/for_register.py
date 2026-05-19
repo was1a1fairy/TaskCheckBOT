@@ -1,33 +1,39 @@
+import re
 from models import User
-import db
+from db import Repo
 from email_validator import validate_email, EmailNotValidError
 from check_password import Check
 
-async def check_username(username) -> bool:
-    if Check().password(username, min_length=6, max_length=20):
-        if not await db.Repo().search_username(username):
-            return 1
-    return 0
 
-async def check_email(email) -> bool:
+async def check_username(username: str, repo: Repo) -> bool:
+    """Проверяет валидность username"""
+    if re.match(r"^[a-zA-Z0-9_]{3,20}$", username):
+        existing = await repo.search_username(username)
+        if not existing:
+            return True
+        else:
+            return False
+    return False
+
+async def check_email(email: str) -> bool:
+    """Проверяет валидность email"""
     try:
         validate_email(email)
     except EmailNotValidError:
-        return 0
-    return 1
+        return False
+    return True
 
 
-async def check_password(password) -> bool:
-    res=Check().password(password, result_type="list", numbers=1, symbols=1, max_length=64)
-    print(res)
+async def check_password(password: str) -> bool:
+    """Проверяет валидность пароля"""
+    res = Check().password(password, result_type="list", numbers=1, symbols=1, max_length=64)
     if res[0]:
-        return 0
-    return 1
+        return True
+    return False
 
 
 
-async def register(user_data, tg_id):
+async def register(user_data: dict, tg_id: int, repo: Repo) -> None:
+    """Регистрирует нового пользователя"""
     user = User(username=user_data["username"],tg_id=tg_id,email=user_data["email"],password=user_data["password"])
-    if await db.Repo().search_user(tg_id):
-        return "Вы уже зарегистрированы с этого телеграм аккаунта, сорян(("
-    await db.Repo().register(user)
+    await repo.register(user)

@@ -1,6 +1,5 @@
 
 from aiogram import Router, F, types
-
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
@@ -18,13 +17,10 @@ class StatesMAIN(StatesGroup):
     note = State()
 
 
-
-# ниже базовые хендлеры для создания и просмотра задач
-
-
 @router.message(lambda message: message.text == "добавить задачу")
 @router.callback_query(F.data == "добавить задачу")
-async def add_task(event: types.CallbackQuery | types.Message, state: FSMContext):
+async def add_task(event: types.CallbackQuery | types.Message, state: FSMContext) -> None:
+    """Начинает процесс добавления задачи"""
     if isinstance(event, types.CallbackQuery):
         await event.message.answer("Придумайте название вашей задачи:")
         await event.answer()
@@ -34,7 +30,8 @@ async def add_task(event: types.CallbackQuery | types.Message, state: FSMContext
 
 
 @router.message(StatesMAIN.name)
-async def try_save_name(message: types.Message, state: FSMContext, repo: Repo):
+async def try_save_name(message: types.Message, state: FSMContext, repo: Repo) -> None:
+    """Проверяет и сохраняет название задачи"""
     res = await additional.is_task_exists(message.from_user.id, message.text, repo)
     if isinstance(res, str):
         await message.reply(res)
@@ -46,7 +43,8 @@ async def try_save_name(message: types.Message, state: FSMContext, repo: Repo):
 
 
 @router.message(StatesMAIN.deadline)
-async def try_save_deadline(message: types.Message, state: FSMContext, repo: Repo):
+async def try_save_deadline(message: types.Message, state: FSMContext, repo: Repo) -> None:
+    """Проверяет и сохраняет дедлайн задачи"""
     try:
         await additional.try_deadline(message, state, repo)
     except ValueError:
@@ -70,15 +68,18 @@ async def try_save_deadline(message: types.Message, state: FSMContext, repo: Rep
 
 
 @router.callback_query(StatesMAIN.priority)
-async def save_priority_ask_note(callback: types.CallbackQuery, state:FSMContext):
+async def save_priority_ask_note(callback: types.CallbackQuery, state: FSMContext) -> None:
+    """Сохраняет приоритет и запрашивает описание"""
     await state.update_data(priority=callback.data)
+    await callback.message.edit_reply_markup(reply_markup=None)
     await callback.message.reply("Супер! Теперь напиши об этой задаче подробнее и мы добавим ее в календарь!")
     await callback.answer()
     await state.set_state(StatesMAIN.note)
 
 
 @router.message(StatesMAIN.note)
-async def save_note_getkb(message: types.Message, state:FSMContext, repo: Repo):
+async def save_note_getkb(message: types.Message, state: FSMContext, repo: Repo) -> None:
+    """Сохраняет описание и завершает создание задачи"""
     await state.update_data(note=message.text.strip())
     await for_main.add_task(await state.get_data(), message.from_user.id, repo)
 
@@ -92,7 +93,8 @@ async def save_note_getkb(message: types.Message, state:FSMContext, repo: Repo):
 
 @router.message(lambda message: message.text == "список задач")
 @router.callback_query(F.data == "список задач")
-async def view_tasks(event: (types.CallbackQuery | types.Message)):
+async def view_tasks(event: types.CallbackQuery | types.Message) -> None:
+    """Показывает меню выбора сортировки задач"""
     builder = InlineKeyboardBuilder()
 
     builder.button(text="по умолчанию",
@@ -124,7 +126,8 @@ async def view_tasks(event: (types.CallbackQuery | types.Message)):
 
 
 @router.callback_query(F.data=="sort")
-async def sort(callback: CallbackQuery, repo: Repo):
+async def sort(callback: CallbackQuery, repo: Repo) -> None:
+    """Показывает задачи в стандартном порядке"""
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(callback.from_user.id, repo)
 
@@ -143,7 +146,8 @@ async def sort(callback: CallbackQuery, repo: Repo):
 
 
 @router.callback_query(lambda bebebe: bebebe.data in ("first_new","first_old"))
-async def first_new(callback: CallbackQuery, repo: Repo):
+async def first_new(callback: CallbackQuery, repo: Repo) -> None:
+    """Показывает задачи отсортированные по дате создания"""
     builder = InlineKeyboardBuilder()
     array = await   for_main.view_tasks(
         callback.from_user.id,
@@ -167,7 +171,8 @@ async def first_new(callback: CallbackQuery, repo: Repo):
 
 
 @router.callback_query(F.data=="chose_param")
-async def chose_param(callback:CallbackQuery):
+async def chose_param(callback: CallbackQuery) -> None:
+    """Показывает меню выбора параметра сортировки"""
     builder = InlineKeyboardBuilder()
 
     builder.button(text="сначала с заканчивающимся дедлайном",callback_data="dead_desc")
@@ -185,7 +190,8 @@ async def chose_param(callback:CallbackQuery):
 
 
 @router.callback_query(F.data=="dead_desc")
-async def dead_desc(callback: CallbackQuery, repo: Repo):
+async def dead_desc(callback: CallbackQuery, repo: Repo) -> None:
+    """Показывает задачи отсортированные по дедлайну"""
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(callback.from_user.id, repo, "deadline", "ASC")
 
@@ -205,7 +211,8 @@ async def dead_desc(callback: CallbackQuery, repo: Repo):
 
 
 @router.callback_query(lambda bebebe: bebebe.data in ("priority_high","priority_low"))
-async def priority_high(callback: CallbackQuery, repo: Repo):
+async def priority_high(callback: CallbackQuery, repo: Repo) -> None:
+    """Показывает задачи с определенным приоритетом"""
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(
         callback.from_user.id,
@@ -229,7 +236,8 @@ async def priority_high(callback: CallbackQuery, repo: Repo):
 
 
 @router.callback_query(lambda f: f.data in ("long_note","short_note"))
-async def long_note(callback: CallbackQuery, repo: Repo):
+async def long_note(callback: CallbackQuery, repo: Repo) -> None:
+    """Показывает задачи отсортированные по длине описания"""
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(
         callback.from_user.id,
@@ -253,7 +261,8 @@ async def long_note(callback: CallbackQuery, repo: Repo):
 
 
 @router.callback_query(lambda f: f.data in ("completed","no_completed"))
-async def completed(callback: CallbackQuery, repo: Repo):
+async def completed(callback: CallbackQuery, repo: Repo) -> None:
+    """Показывает выполненные или невыполненные задачи"""
     builder = InlineKeyboardBuilder()
     array = await for_main.view_tasks(
         callback.from_user.id,
@@ -279,11 +288,8 @@ async def completed(callback: CallbackQuery, repo: Repo):
 
 
 @router.callback_query(lambda data: data.data and data.data.startswith("task-"))
-async def list_tasks(callback: CallbackQuery, repo: Repo):
-    """
-    выводит конкретную таску
-    """
+async def list_tasks(callback: CallbackQuery, repo: Repo) -> None:
+    """Выводит конкретную задачу"""
     task_id = int(callback.data[5::])
     user_id = callback.from_user.id
-    print(user_id)
     await callback.message.answer(f"{await for_main.format_output_task(user_id, task_id, repo)}", parse_mode="Markdown")

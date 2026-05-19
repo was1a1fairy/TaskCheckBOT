@@ -1,16 +1,15 @@
-# здесь будут дополнительные штуки для украшения или оформления вывода и проверки,
-# использоваться они будут и в main и в basic и в optional handlers
-
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-
 import db
 
+
 async def create_db():
+    """Создает таблицы в базе данных"""
     bd = await db.Repo().create_tables()
     return bd
 
 
-async def create_output(list_task:list[dict]) -> list[list]:
+async def create_output(list_task: list[dict]) -> list[list]:
+    """Преобразует список задач в формат для вывода"""
 
     res = []
 
@@ -29,6 +28,7 @@ async def create_output(list_task:list[dict]) -> list[list]:
 
 
 async def choice_priority():
+    """Создает клавиатуру выбора приоритета"""
     builder = InlineKeyboardBuilder()
 
     builder.button(text="высокий",
@@ -43,12 +43,8 @@ async def choice_priority():
     return builder.as_markup()
 
 
-async def check_deadline(deadline, db) -> bool:
-    """
-    проверяет корректность введения дедлайна
-    :param deadline: дд.мм.гггг
-    :return: bool
-    """
+async def check_deadline(deadline: str, db: db.Repo) -> bool:
+    """Проверяет корректность введения дедлайна"""
     if "\\" in deadline:
         deadline = deadline.split("\\")
     elif "/" in deadline:
@@ -65,7 +61,7 @@ async def check_deadline(deadline, db) -> bool:
     month = int(deadline[1])
     year = int(deadline[2])
 
-    if (31 < day or day < 0) or (0 > month or month > 12) or len(str(year)) != 4:
+    if (day < 1 or day > 31) or (month < 1 or month > 12) or len(str(year)) != 4:
         return False
 
     now = await db.date_now()
@@ -80,13 +76,15 @@ async def check_deadline(deadline, db) -> bool:
     return True
 
 
-def something(text):
+def something(text: str):
+    """Создает кнопку с текстом"""
     keyboard = InlineKeyboardBuilder()
     keyboard.button(text="что-нибудь",callback_data=text)
     return keyboard
 
 
-async def try_deadline(message, state, db):
+async def try_deadline(message, state, db: db.Repo) -> None:
+    """Пытается сохранить дедлайн с проверкой"""
     deadline = message.text.strip()
     try:
         await check_deadline(deadline, db)
@@ -102,6 +100,7 @@ async def try_deadline(message, state, db):
             raise ValueError
 
 
-async def is_task_exists(user_id, task_name:str, db):
+async def is_task_exists(user_id: int, task_name: str, db: db.Repo) -> str | None:
+    """Проверяет существует ли задача с таким именем"""
     if await db.is_exist(user_id=user_id,task_name=task_name):
         return "Сорри, у тебя уже существует задача с таким именем, выбери другое!"

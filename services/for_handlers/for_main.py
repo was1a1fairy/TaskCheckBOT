@@ -1,11 +1,12 @@
 
 import models
+from db import Repo
 from services.for_handlers import additional
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 
-
-async def add_task(data:dict, id_user, db):
+async def add_task(data: dict, id_user: int, db: Repo) -> None:
+    """Добавляет задачу в базу данных"""
     task = models.Task(
         name=data["name"],
         deadline=data["deadline"],
@@ -14,22 +15,21 @@ async def add_task(data:dict, id_user, db):
     )
     await db.add_task(task, id_user)
 
-async def translate_completed(param:str) -> str:
-    """
-    используется только в сортировке по complete для view_tasks,
-    чтобы покрасивше вывести задачи
-    """
+async def translate_completed(param: str) -> str:
+    """Переводит статус выполнения на русский"""
     if param == "completed":
         return "выполненные"
     return "невыполненные"
 
-async def view_tasks(id_user, db, param=None, key=None) -> list[list]:
+async def view_tasks(id_user: int, db: Repo, param: str = None, key: str = None) -> list[list]:
+    """Показывает задачи пользователя"""
     task_dict = await db.show_tasks(id_user, param,key)
     return await additional.create_output(task_dict)
 
 
 
-async def format_output_task(user_id:int, task_id:int, db):
+async def format_output_task(user_id: int, task_id: int, db: Repo) -> str:
+    """Форматирует задачу для красивого вывода"""
     data_db = await db.search_by_id(user_id, task_id)
     task = await additional.create_output(data_db)
     meow = (
@@ -42,16 +42,16 @@ async def format_output_task(user_id:int, task_id:int, db):
     return meow
 
 
-# for_handlers
-
 def get_kb():
+    """Создает главную клавиатуру"""
     keyboard = [
         [KeyboardButton(text="добавить задачу"),
          KeyboardButton(text="редактировать задачу")],
         [KeyboardButton(text="отметить выполнение"),
          KeyboardButton(text="удалить задачу")],
         [KeyboardButton(text="список задач"),
-         KeyboardButton(text="установить напоминание")]
+         KeyboardButton(text="установить напоминание")],
+        [KeyboardButton(text="вернуться в начало")]
     ]
 
     reply_markup = ReplyKeyboardMarkup(

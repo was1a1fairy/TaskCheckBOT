@@ -3,26 +3,27 @@ from dataclasses import dataclass
 
 @dataclass
 class Task:
-
+    """Модель задачи"""
     name: str
     deadline: str
     priority: str
     note: str
-    completed:bool=0
-    id:int=None
+    completed: bool = 0
+    id: int = None
 
-    def __str__(self):
-        return f"{self.name,self.deadline,self.priority,self.note,self.completed}"
+    def __str__(self) -> str:
+        return f"{self.name, self.deadline, self.priority, self.note, self.completed}"
 
 
 @dataclass
 class User:
-
-    username:str
+    """Модель пользователя"""
     tg_id: str
-    email: str
-    password: str
-    id:int=None
+    is_registered: bool = None
+    username: str = None
+    email: str = None
+    password: str = None
+    id: int = None
 
-    def __str__(self):
-        return f"{self.username,self.tg_id,self.email,self.password}"
+    def __str__(self) -> str:
+        return f"{self.username, self.tg_id, self.email, self.password}"
