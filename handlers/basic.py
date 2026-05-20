@@ -32,10 +32,12 @@ async def start(message: types.Message) -> None:
                          )
 
 
+@router.message(filters.Command("help"))
 @router.callback_query(F.data=="help")
-async def helpp(callback: CallbackQuery, state: FSMContext) -> None:
+async def helpp(event: CallbackQuery, state: FSMContext) -> None:
     """Показывает справку"""
-    await callback.message.reply(f"""
+    event = event.message if event.message else event
+    await event.message.reply(f"""
 🤖 *Что я умею:*
 
 📝 *Добавлять задачи* — с названием, дедлайном, приоритетом и описанием
