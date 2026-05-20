@@ -38,10 +38,7 @@ class Register(BaseMiddleware):
         if user_exists:
             return await handler(event, data)
 
-        if current_state and "StatesREG" in str(current_state):
-            return await handler(event, data)
-
-        if current_state and "StatesLOG" in str(current_state):
+        if current_state in ["StatesREG", "StatesLOG"]:
             return await handler(event, data)
 
         if current_state and state:

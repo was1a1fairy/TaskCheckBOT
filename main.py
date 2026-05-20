@@ -10,21 +10,15 @@ import handlers
 from handlers import basic, login, main, optional, register, analytics
 from middleware import register as register_middleware
 
-bot = aiogram.Bot(token)
-dp = Dispatcher()
-
 
 async def main() -> None:
     """Главная функция для запуска бота"""
+    bot = aiogram.Bot(token)
+    dp = Dispatcher()
     repo = Repo("repo.db")
     repo = await repo.connect()
     dp.update.outer_middleware(register_middleware.Register(repo))
-    dp.include_routers(basic.router)
-    dp.include_routers(handlers.main.router)
-    dp.include_routers(optional.router)
-    dp.include_routers(handlers.register.router)
-    dp.include_routers(analytics.router)
-    dp.include_routers(login.router)
+    dp.include_routers(basic.router, handlers.main.router, optional.router, handlers.register.router, analytics.router, login.router)
 
     scheduler = BackgroundScheduler()
     services.reminders.start_reminder_service(scheduler, bot, repo, days=1)

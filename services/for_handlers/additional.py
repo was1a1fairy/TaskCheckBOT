@@ -2,12 +2,6 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 import db
 
 
-async def create_db():
-    """Создает таблицы в базе данных"""
-    bd = await db.Repo().create_tables()
-    return bd
-
-
 async def create_output(list_task: list[dict]) -> list[list]:
     """Преобразует список задач в формат для вывода"""
 
