@@ -51,7 +51,8 @@ def get_kb():
          KeyboardButton(text="удалить задачу")],
         [KeyboardButton(text="список задач"),
          KeyboardButton(text="установить напоминание")],
-        [KeyboardButton(text="вернуться в начало")]
+        [KeyboardButton(text="моя аналитика"),
+         KeyboardButton(text="вернуться в начало")]
     ]
 
     reply_markup = ReplyKeyboardMarkup(

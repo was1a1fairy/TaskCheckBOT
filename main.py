@@ -7,7 +7,7 @@ import services.reminders
 from db import Repo
 from secret_data import token
 import handlers
-from handlers import basic, login, main, optional, register
+from handlers import basic, login, main, optional, register, analytics
 from middleware import register as register_middleware
 
 bot = aiogram.Bot(token)
@@ -23,8 +23,9 @@ async def main() -> None:
     dp.include_routers(handlers.main.router)
     dp.include_routers(optional.router)
     dp.include_routers(handlers.register.router)
+    dp.include_routers(analytics.router)
     dp.include_routers(login.router)
-    
+
     scheduler = BackgroundScheduler()
     services.reminders.start_reminder_service(scheduler, bot, repo, days=1)
     

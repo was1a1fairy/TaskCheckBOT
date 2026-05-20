@@ -342,3 +342,33 @@ class Repo:
             """)
         data = await res.fetchone()
         return data[0].split("-")[::-1]
+
+    async def get_user_analytics(self, user_id: int) -> dict:
+        """Возвращает аналитику пользователя: статистику задач"""
+        if self.conn is None:
+            await self.connect()
+        
+        # Общее количество задач
+        res = await self.conn.execute("""
+            SELECT COUNT(*) FROM tasks WHERE user_tg_id = ?;
+        """, (user_id,))
+        total_tasks = (await res.fetchone())[0]
+        
+        # Выполненные задачи
+        res = await self.conn.execute("""
+            SELECT COUNT(*) FROM tasks WHERE user_tg_id = ? AND completed = 1;
+        """, (user_id,))
+        completed_tasks = (await res.fetchone())[0]
+        
+        # Задачи по приоритетам
+        res = await self.conn.execute("""
+            SELECT priority, COUNT(*) FROM tasks WHERE user_tg_id = ? GROUP BY priority;
+        """, (user_id,))
+        priority_data = await res.fetchall()
+        priority_stats = {row[0]: row[1] for row in priority_data}
+        
+        return {
+            "total_tasks": total_tasks,
+            "completed_tasks": completed_tasks,
+            "priority_stats": priority_stats
+        }
